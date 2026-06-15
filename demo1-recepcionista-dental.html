@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NegoFlow – Demo 1: Recepcionista Virtual</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #080d12;
+    --surface: #0f1923;
+    --surface2: #162030;
+    --border: #1e2e3d;
+    --green: #25d366;
+    --green-dim: #0d3d2e;
+    --blue: #38bdf8;
+    --blue-dim: #0c2233;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --text: #e9edef;
+    --muted: #64748b;
+    --wa-in: #202c33;
+    --wa-out: #005c4b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px 16px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+    max-width: 360px;
+    width: 100%;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-dim);
+    border: 1px solid #1a5c3a;
+    color: var(--green);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+  }
+
+  .pulse {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 6px;
+  }
+
+  h1 span { color: var(--green); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  /* Features strip */
+  .features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    max-width: 360px;
+    margin-bottom: 20px;
+  }
+
+  .feat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 4px 10px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    max-width: 360px;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .tab {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+
+  .tab.active {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+
+  /* Phone */
+  .phone {
+    width: 320px;
+    border-radius: 32px;
+    overflow: hidden;
+    border: 1.5px solid var(--border);
+    background: #0b141a;
+    box-shadow: 0 32px 80px rgba(0,0,0,.7);
+  }
+
+  .wa-header {
+    background: #1f2c34;
+    padding: 12px 14px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #25d366, #128c7e);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+
+  .wa-name { color: #e9edef; font-size: 13.5px; font-weight: 700; }
+  .wa-sub { color: var(--green); font-size: 10.5px; }
+
+  .chat-body {
+    background: #0b141a;
+    padding: 10px 8px;
+    min-height: 400px;
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow-y: auto;
+  }
+
+  .date-pill {
+    align-self: center;
+    background: #1f2c34;
+    color: #8696a0;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 8px;
+    margin: 4px 0;
+  }
+
+  .msg {
+    max-width: 82%;
+    padding: 7px 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.45;
+    position: relative;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .3s ease, transform .3s ease;
+  }
+
+  .msg.visible { opacity: 1; transform: translateY(0); }
+  .msg.in { background: var(--wa-in); align-self: flex-start; border-top-left-radius: 0; }
+  .msg.out { background: var(--wa-out); align-self: flex-end; border-top-right-radius: 0; }
+
+  .msg .time {
+    position: absolute; bottom: 4px; right: 8px;
+    font-size: 9.5px; color: #8696a0;
+  }
+  .msg.out .time { color: #a8d5c8; }
+
+  .bot-label {
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 3px;
+  }
+
+  .sys-msg {
+    align-self: center;
+    background: rgba(56,189,248,.08);
+    border: 1px solid rgba(56,189,248,.2);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 10.5px;
+    color: var(--blue);
+    font-family: 'JetBrains Mono', monospace;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .3s, transform .3s;
+    max-width: 90%;
+  }
+
+  .sys-msg.visible { opacity: 1; transform: translateY(0); }
+
+  .typing {
+    align-self: flex-start;
+    background: var(--wa-in);
+    border-radius: 8px;
+    border-top-left-radius: 0;
+    padding: 10px 14px;
+    display: none;
+    gap: 4px;
+    align-items: center;
+  }
+  .typing.show { display: flex; }
+
+  .dot {
+    width: 6px; height: 6px;
+    background: #8696a0;
+    border-radius: 50%;
+    animation: bounce .9s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: .15s; }
+  .dot:nth-child(3) { animation-delay: .3s; }
+
+  @keyframes bounce {
+    0%,60%,100% { transform: translateY(0); }
+    30% { transform: translateY(-4px); }
+  }
+
+  /* System log panel */
+  .sys-panel {
+    width: 320px;
+    margin-top: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .sys-panel-header {
+    background: var(--surface2);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sys-panel-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--blue);
+  }
+
+  .sys-log {
+    padding: 10px 14px;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+  }
+
+  .log-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity .3s, transform .3s;
+    line-height: 1.5;
+  }
+
+  .log-entry.visible { opacity: 1; transform: translateX(0); }
+
+  .log-icon { flex-shrink: 0; margin-top: 1px; }
+  .log-text { color: var(--muted); }
+  .log-text b { color: var(--text); font-weight: 500; }
+  .log-text.ok { color: var(--green); }
+  .log-text.info { color: var(--blue); }
+  .log-text.warn { color: var(--amber); }
+
+  /* Capabilities section */
+  .caps {
+    max-width: 320px;
+    width: 100%;
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .cap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .cap-icon { font-size: 16px; flex-shrink: 0; }
+  .cap-text { font-size: 11px; color: var(--muted); line-height: 1.4; }
+  .cap-text b { display: block; color: var(--text); font-size: 11.5px; margin-bottom: 2px; }
+
+  /* Footer */
+  .footer {
+    margin-top: 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.7;
+    max-width: 300px;
+  }
+
+  .footer strong { color: var(--text); }
+
+  .restart-btn {
+    margin-top: 14px;
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 22px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all .2s;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .restart-btn:hover { border-color: var(--green); color: var(--green); }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge"><div class="pulse"></div> Demo 1 en vivo</div>
+  <h1>Recepcionista Virtual<br><span>para Clínicas Dentales</span></h1>
+  <p class="subtitle">El bot maneja WhatsApp solo. El dentista solo atiende pacientes.</p>
+</div>
+
+<div class="features">
+  <div class="feat">✅ 24/7 sin descanso</div>
+  <div class="feat">📅 Google Calendar real</div>
+  <div class="feat">🔔 Recordatorios automáticos</div>
+  <div class="feat">🆘 Escala a humano</div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" onclick="loadScene('agendar', this)">📅 Agendar</button>
+  <button class="tab" onclick="loadScene('cancelar', this)">❌ Cancelar</button>
+  <button class="tab" onclick="loadScene('horarios', this)">🕐 Horarios</button>
+  <button class="tab" onclick="loadScene('recordatorio', this)">🔔 Recordatorio</button>
+  <button class="tab" onclick="loadScene('escalar', this)">🆘 Escalar</button>
+</div>
+
+<div class="phone">
+  <div class="wa-header">
+    <div class="avatar">🦷</div>
+    <div>
+      <div class="wa-name">Clínica Dental</div>
+      <div class="wa-sub">● Recepcionista Virtual activa</div>
+    </div>
+  </div>
+  <div class="chat-body" id="chat">
+    <div class="date-pill">Hoy</div>
+    <div class="typing" id="typing">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<div class="sys-panel">
+  <div class="sys-panel-header">
+    <span>⚙️</span>
+    <span class="sys-panel-title">Lo que hace el sistema por dentro</span>
+  </div>
+  <div class="sys-log" id="syslog"></div>
+</div>
+
+<div class="caps">
+  <div class="cap"><div class="cap-icon">💬</div><div class="cap-text"><b>Entiende lenguaje natural</b>Interpreta lo que el paciente quiere escriba como escriba</div></div>
+  <div class="cap"><div class="cap-icon">📅</div><div class="cap-text"><b>Google Calendar real</b>Revisa disponibilidad y agenda directamente</div></div>
+  <div class="cap"><div class="cap-icon">🔔</div><div class="cap-text"><b>Recordatorios solos</b>Avisa al paciente 24h antes automáticamente</div></div>
+  <div class="cap"><div class="cap-icon">🆘</div><div class="cap-text"><b>Escala a humano</b>Si no puede responder, transfiere a recepción</div></div>
+</div>
+
+<button class="restart-btn" onclick="restart()">↺ Repetir escenario</button>
+
+<div class="footer">
+  <strong>Sin este sistema:</strong> la clínica pierde pacientes que escriben a las 10pm y no reciben respuesta hasta el día siguiente.<br><br>
+  <strong>Con este sistema:</strong> cada mensaje tiene respuesta en segundos, toda la noche.
+</div>
+
+<script>
+const scenes = {
+  agendar: {
+    messages: [
+      { type: 'out', text: 'Hola buenas, quería ver si tienen lugar para una limpieza dental esta semana 🙏', time: '9:42' },
+      { type: 'sys', text: '🧠 Analizando intención del mensaje...' },
+      { type: 'sys', text: '✅ Intención: AGENDAR_CITA · Servicio: Limpieza dental' },
+      { type: 'in', bot: true, text: '¡Hola! 😊 Con gusto te ayudo a agendar tu limpieza dental.\n\n¿Tienes alguna preferencia de día esta semana? Tenemos disponibilidad de lunes a sábado.', time: '9:42' },
+      { type: 'out', text: 'El jueves o viernes en la mañana si se puede', time: '9:43' },
+      { type: 'sys', text: '📅 Consultando Google Calendar...' },
+      { type: 'sys', text: '🟢 Jueves: 9am ✓  11am ✓  |  Viernes: 10am ✓' },
+      { type: 'in', bot: true, text: 'Perfecto, revisé la agenda 📋\n\nTenemos disponible:\n\n📅 *Jueves* a las 9:00am o 11:00am\n📅 *Viernes* a las 10:00am\n\n¿Cuál te queda mejor?', time: '9:43' },
+      { type: 'out', text: 'El jueves a las 11', time: '9:44' },
+      { type: 'in', bot: true, text: '¡Casi listo! Solo necesito tu nombre completo para registrarte 📋', time: '9:44' },
+      { type: 'out', text: 'Sofía Ramírez', time: '9:44' },
+      { type: 'sys', text: '📝 Creando cita en Google Calendar...' },
+      { type: 'sys', text: '✅ Cita agendada: Sofía Ramírez · Jueves 10:00am · Limpieza dental' },
+      { type: 'in', bot: true, text: '¡Todo listo, Sofía! 🎉\n\nTu cita está confirmada:\n\n🗓 *Jueves* a las *11:00am*\n🦷 Limpieza dental\n📍 Clínica Dental\n\nTe mandaremos un recordatorio mañana por la mañana. ¡Nos vemos! 😊', time: '9:45' },
+      { type: 'sys', text: '📲 Confirmación enviada al paciente' },
+      { type: 'sys', text: '⏰ Recordatorio programado: miércoles 9:00am' },
+    ]
+  },
+  cancelar: {
+    messages: [
+      { type: 'out', text: 'Hola, tengo cita mañana a las 3 pero no voy a poder ir, la puedo cancelar?', time: '2:15' },
+      { type: 'sys', text: '🧠 Analizando intención del mensaje...' },
+      { type: 'sys', text: '✅ Intención: CANCELAR_CITA' },
+      { type: 'sys', text: '📅 Buscando cita del paciente en Google Calendar...' },
+      { type: 'sys', text: '🟢 Cita encontrada: mañana 3:00pm · Carlos Mendoza' },
+      { type: 'in', bot: true, text: 'Hola 👋 Encontré tu cita de mañana a las 3:00pm.\n\n¿Confirmas que deseas cancelarla?', time: '2:15' },
+      { type: 'out', text: 'Sí por favor', time: '2:16' },
+      { type: 'sys', text: '🗑 Eliminando cita de Google Calendar...' },
+      { type: 'sys', text: '✅ Cita cancelada exitosamente' },
+      { type: 'in', bot: true, text: 'Listo, tu cita quedó cancelada ✅\n\nCuando quieras reagendar, solo escríbenos y con gusto te ayudamos 😊', time: '2:16' },
+    ]
+  },
+  horarios: {
+    messages: [
+      { type: 'out', text: 'A qué horas abren? y atienden sábados?', time: '11:30' },
+      { type: 'sys', text: '🧠 Analizando intención del mensaje...' },
+      { type: 'sys', text: '✅ Intención: CONSULTA_HORARIOS · Respuesta inmediata' },
+      { type: 'in', bot: true, text: '¡Hola! 😊 Nuestros horarios son:\n\n📅 *Lunes a Viernes:* 9:00am – 7:00pm\n📅 *Sábados:* 9:00am – 2:00pm\n\n¿Te gustaría agendar una cita? 🦷', time: '11:30' },
+      { type: 'out', text: 'Sí, el sábado si tienen lugar', time: '11:31' },
+      { type: 'sys', text: '📅 Consultando Google Calendar — Sábado...' },
+      { type: 'sys', text: '🟢 Sábado: 10am ✓  11:30am ✓' },
+      { type: 'in', bot: true, text: '¡Sí tenemos! 🙌\n\nEste sábado hay lugar a las *10:00am* y *11:30am*.\n\n¿Cuál te queda mejor y qué servicio necesitas?', time: '11:31' },
+      { type: 'out', text: 'Revisión general a las 10', time: '11:32' },
+      { type: 'sys', text: '📝 Creando cita en Google Calendar...' },
+      { type: 'sys', text: '✅ Cita agendada: Sábado 10:00am · Revisión general' },
+      { type: 'in', bot: true, text: '¡Perfecto! Tu cita del sábado a las *10:00am* para revisión general está reservada ✅\n\n¿Cómo te llamas para registrarte? 📋', time: '11:32' },
+    ]
+  },
+  recordatorio: {
+    messages: [
+      { type: 'sys', text: '⏰ Recordatorio programado ejecutándose...' },
+      { type: 'sys', text: '📅 Paciente con cita mañana: Ana Torres · 4:00pm · Blanqueamiento' },
+      { type: 'in', bot: true, text: '¡Hola, Ana! 👋\n\nTe recordamos que mañana tienes cita en la Clínica Dental:\n\n🗓 *Mañana* a las *4:00pm*\n🦷 Blanqueamiento dental\n📍 Clínica Dental\n\nPor favor confírmanos tu asistencia respondiendo *SÍ* o *NO* 😊', time: '9:00' },
+      { type: 'sys', text: '📲 Recordatorio enviado a Ana Torres' },
+      { type: 'out', text: 'Sí ahí estaré! gracias', time: '9:14' },
+      { type: 'sys', text: '🧠 Analizando respuesta: CONFIRMACIÓN POSITIVA' },
+      { type: 'sys', text: '✅ Asistencia confirmada en Calendar' },
+      { type: 'in', bot: true, text: '¡Perfecto, Ana! ✅ Te esperamos mañana a las 4:00pm.\n\nSi necesitas cambiar algo antes de tu cita, solo escríbenos 😊', time: '9:14' },
+    ]
+  },
+  escalar: {
+    messages: [
+      { type: 'out', text: 'Hola, me hice un tratamiento de conducto hace 3 meses y me sigue doliendo, es normal?', time: '8:50' },
+      { type: 'sys', text: '🧠 Analizando intención del mensaje...' },
+      { type: 'sys', text: '⚠️ Intención: CONSULTA_MÉDICA · Fuera del alcance del bot' },
+      { type: 'sys', text: '🆘 Activando transferencia a recepcionista humano...' },
+      { type: 'in', bot: true, text: 'Hola 👋 Gracias por escribirnos.\n\nEsta pregunta es importante y quiero que la responda directamente nuestra dentista para darte la información correcta 🦷\n\n*Te estoy transfiriendo con nuestra recepcionista ahora mismo.* Ella te atenderá en los próximos minutos.\n\n¿Tienes algún otro dato que quieras que le compartamos?', time: '8:50' },
+      { type: 'sys', text: '📨 Alerta enviada a recepcionista: "Paciente con dolor post-conducto"' },
+      { type: 'sys', text: '✅ Conversación transferida a humano' },
+      { type: 'out', text: 'Gracias, es que me preocupó bastante', time: '8:52' },
+      { type: 'in', bot: true, text: 'Entiendo, es normal preocuparse 🙏\n\nNuestra recepcionista ya fue notificada y te escribe muy pronto. ¡Estás en buenas manos!', time: '8:52' },
+    ]
+  }
+};
+
+let current = 'agendar';
+let msgIndex = 0;
+let timer = null;
+
+function loadScene(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  current = name;
+  restart();
+}
+
+function restart() {
+  clearTimeout(timer);
+  msgIndex = 0;
+
+  const chat = document.getElementById('chat');
+  const typing = document.getElementById('typing');
+  Array.from(chat.children).forEach(el => {
+    if (!el.classList.contains('date-pill') && !el.classList.contains('typing')) el.remove();
+  });
+  typing.classList.remove('show');
+
+  document.getElementById('syslog').innerHTML = '';
+  showNext();
+}
+
+function showNext() {
+  const msgs = scenes[current].messages;
+  if (msgIndex >= msgs.length) return;
+
+  const m = msgs[msgIndex];
+  const chat = document.getElementById('chat');
+  const typing = document.getElementById('typing');
+
+  if (m.type === 'in') {
+    typing.classList.add('show');
+    chat.appendChild(typing);
+    chat.scrollTop = chat.scrollHeight;
+    timer = setTimeout(() => {
+      typing.classList.remove('show');
+      appendChat(m, chat);
+      msgIndex++;
+      timer = setTimeout(showNext, 900);
+    }, 1300);
+  } else if (m.type === 'out') {
+    timer = setTimeout(() => {
+      appendChat(m, chat);
+      msgIndex++;
+      timer = setTimeout(showNext, 600);
+    }, 400);
+  } else if (m.type === 'sys') {
+    timer = setTimeout(() => {
+      appendLog(m.text);
+      msgIndex++;
+      timer = setTimeout(showNext, 500);
+    }, 300);
+  }
+}
+
+function appendChat(m, chat) {
+  const el = document.createElement('div');
+  el.className = `msg ${m.type}`;
+  let inner = '';
+  if (m.bot) inner += `<div class="bot-label">🤖 Recepcionista Virtual</div>`;
+  inner += m.text.replace(/\n/g, '<br>').replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+  inner += `<span class="time">${m.time}${m.type === 'out' ? ' ✓✓' : ''}</span>`;
+  el.innerHTML = inner;
+  chat.insertBefore(el, document.getElementById('typing'));
+  chat.scrollTop = chat.scrollHeight;
+  setTimeout(() => el.classList.add('visible'), 10);
+}
+
+function appendLog(text) {
+  const log = document.getElementById('syslog');
+  const el = document.createElement('div');
+  el.className = 'log-entry';
+
+  const isOk = text.startsWith('✅');
+  const isWarn = text.startsWith('⚠️');
+  const isInfo = text.startsWith('📅') || text.startsWith('📝') || text.startsWith('📲') || text.startsWith('📨') || text.startsWith('⏰');
+
+  const textClass = isOk ? 'ok' : isWarn ? 'warn' : isInfo ? 'info' : '';
+
+  el.innerHTML = `<span class="log-text ${textClass}">${text}</span>`;
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+  setTimeout(() => el.classList.add('visible'), 10);
+}
+
+showNext();
+</script>
+</body>
+</html>
